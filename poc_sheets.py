@@ -19,6 +19,17 @@ SCOPES = 'https://www.googleapis.com/auth/spreadsheets.readonly'
 CLIENT_SECRET_FILE = 'client_secret.json'
 APPLICATION_NAME = 'Google Sheets API Python Quickstart'
 
+KNOWN_HEADERS = {
+    "name" : "Company Name",
+    "convictionThreshold": "Conviction Threshold (Yrs)",
+    "convictionRestrictions": "Conviction Restrictions",
+    "schedule": "Part Time / Full Time",
+    "industry": "Industry",
+    "type": "Type",
+    "requiredAbilities": "Required Abilities",
+    "driversLicenseRequired": "Requires Driver's License",
+}
+
 
 def get_credentials():
    """Gets valid user credentials from storage.
@@ -55,8 +66,64 @@ def fill_none(iterable):
         yield last_item
 
 
+def strip(iterable):
+    return map(lambda s: s.strip(), iterable)
+
+
 def parse_headers(sheet_values):
-   return zip(fill_none(sheet_values[0]), sheet_values[1])
+   return zip(fill_none(strip(sheet_values[0])), strip(sheet_values[1]))
+
+
+def parse_value(primary_header, sheet_row, sheet_headers):
+    header_value_pairs = zip(sheet_headers, sheet_row)
+    return filter(lambda item: item[0][0] == primary_header, header_value_pairs)[0][1]
+
+
+def parse_value_pairs(primary_header, parser, sheet_row, sheet_headers):
+    header_value_pairs = zip(sheet_headers, sheet_row)
+    return map(lambda (hdr, value): (hdr[1], parser(value)), filter(lambda item: item[0][0] == primary_header, header_value_pairs))
+
+
+def parse_boolean(s):
+    return s.lower == "true"
+
+
+def key_val_dict_list(iterable):
+    return map(lambda (k, v): { "key" : k, "value" : v }, iterable)
+
+
+def parse_opportunity(sheet_row, sheet_headers):
+   return {
+      "name":
+         parse_value("Company Name", sheet_row, sheet_headers),
+      "convictionThreshold":
+         parse_value("Conviction Threshold (Yrs)", sheet_row, sheet_headers),
+      "convictionRestrictions":
+         dict(parse_value_pairs("Conviction Restrictions", parse_boolean, sheet_row, sheet_headers)),
+      "partTimeAvailable":
+         "PT" in parse_value("Part Time / Full Time", sheet_row, sheet_headers),
+      "industry":
+         parse_value("Industry", sheet_row, sheet_headers),
+      "type":
+         parse_value("Type", sheet_row, sheet_headers),
+      "schedule":
+         parse_value("Part Time / Full Time", sheet_row, sheet_headers),
+      "requiredAbilities":
+         dict(parse_value_pairs("Required Abilities", parse_boolean, sheet_row, sheet_headers)),
+      "driversLicenseRequired":
+         parse_boolean(parse_value("Requires Driver's License", sheet_row, sheet_headers)),
+      "humanFriendly":
+         key_val_dict_list(
+            map(
+               lambda hdr: (
+                  hdr[0],
+                  parse_value_pairs(
+                     hdr[0],
+                     lambda x: x,
+                     sheet_row,
+                     sheet_headers)),
+               filter(lambda hdr: hdr[0] not in KNOWN_HEADERS.values(), sheet_headers))),
+   }
 
 
 def main():
@@ -85,8 +152,10 @@ def main():
    if not values:
        print('No data found.')
    else:
-       print(values)
-       print(parse_headers(values))
+#       print(values)
+       headers = parse_headers(values)
+       print(headers)
+       print(parse_opportunity(values[2], headers))
        """
        for row in values:
            # Print columns A and E, which correspond to indices 0 and 4.
