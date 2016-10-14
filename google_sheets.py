@@ -7,12 +7,8 @@ def get_sheets_auth_scope():
     return 'https://www.googleapis.com/auth/spreadsheets.readonly'
 
 
-def get_sheet_values(spreadsheetId, rangeName):
-    return get_sheet_values_cred(spreadsheetId, rangeName, get_credentials().to_json())
-
-
 ## https://developers.google.com/sheets/samples/reading
-def get_sheet_values_cred(spreadsheetId, rangeName, credentials_json):
+def get_sheet_values(spreadsheetId, rangeName, credentials_json):
     http = client.OAuth2Credentials.from_json(credentials_json).authorize(httplib2.Http())
     discoveryUrl = ('https://sheets.googleapis.com/$discovery/rest?'
                    'version=v4')

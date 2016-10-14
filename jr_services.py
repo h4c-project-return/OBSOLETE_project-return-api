@@ -1,7 +1,7 @@
 from flask import Flask, url_for, json, make_response, request, session, redirect
 from flask_cors import CORS
 from google_authorization import *
-from google_sheets import get_sheet_values_cred
+from google_sheets import get_sheet_values
 from opportunity_parsing import parse_opportunities, get_opportunities_criteria
 from opportunity_filtering import filter_opportunities
 import uuid
@@ -18,7 +18,7 @@ def get_session_value(key):
 
 
 def get_opportunities_sheet():
-    return get_sheet_values_cred(
+    return get_sheet_values(
         '1s_EC5hn-A-yKFUYWKO3RZ768AVW9FL-DKNZ3QBb0tls',
         'Job Opportunities',
         get_session_value(SESSION_CREDENTIALS_KEY))
