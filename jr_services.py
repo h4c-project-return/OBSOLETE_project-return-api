@@ -46,8 +46,9 @@ def api_opportunities():
 
 @app.route('/opportunities/search', methods=['POST'])
 def api_opportunities_search():
+    ## E.g.,  {"convictions":[{"type":"Sex","year":2004}],"partTimeOnly":False,"hasDriversLicense":True,"industries":["Building Construction/Skilled Trade"],"abilities":['Standing for 8hrs', '_Heavy Lifting', 'capable with tools and machinery', 'Attention to Detail']}
     return build_json_response_success(
-        list(filter_opportunities({"convictions":[{"type":"Sex","year":2004}],"partTimeOnly":False,"hasDriversLicense":True,"industries":["Building Construction/Skilled Trade"],"abilities":['Standing for 8hrs', '_Heavy Lifting', 'capable with tools and machinery', 'Attention to Detail']}, get_all_opportunities())),
+        list(filter_opportunities(request.json, get_all_opportunities())),
         request.data,
         "POST",
         url_for('api_opportunities_search'))
