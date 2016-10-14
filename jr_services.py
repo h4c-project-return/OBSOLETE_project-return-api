@@ -10,25 +10,25 @@ def get_all_opportunities():
     return parse_opportunities(sheet)
 
 
-def build_json_response_success(data, requestBody, requestMethod, requestUrl):
+def build_json_response_success(data, request_body, request_method, request_url):
     return json.dumps({
         "data": data,
         "request": {
-            "body": requestBody,
-            "method": requestMethod,
-            "url": requestUrl
+            "body": request_body,
+            "method": request_method,
+            "url": request_url
         },
         "exception": None
     })
 
 
-def build_json_response_failure(exception, requestBody, requestMethod, requestUrl):
+def build_json_response_failure(exception, request_body, request_method, request_url):
     return json.dumps({
         "data": None,
         "request": {
-            "body": requestBody,
-            "method": requestMethod,
-            "url": requestUrl
+            "body": request_body,
+            "method": request_method,
+            "url": request_url
         },
         "exception": exception
     })
@@ -42,6 +42,7 @@ CORS(app)
 def api_root():
     return 'These are not the droids you are looking for.'
 
+
 @app.route('/opportunities', methods=['GET'])
 def api_opportunities():
     resp = build_json_response_success(
@@ -54,13 +55,15 @@ def api_opportunities():
 
 
 @app.route('/opportunities/search', methods=['POST'])
-## E.g.,  {"convictions":[{"type":"Sex","year":2004}],"partTimeOnly":False,"hasDriversLicense":True,"industries":["Building Construction/Skilled Trade"],"abilities":['Standing for 8hrs', '_Heavy Lifting', 'capable with tools and machinery', 'Attention to Detail']}
+# E.g.,  {"convictions":[{"type":"Sex","year":2004}],"partTimeOnly":False,"hasDriversLicense":True,
+# "industries":["Building Construction/Skilled Trade"],"abilities":['Standing for 8hrs',
+# '_Heavy Lifting', 'capable with tools and machinery', 'Attention to Detail']}
 def api_opportunities_search():
-    resp = build_json_response_success(
+    resp = make_response(build_json_response_success(
         list(filter_opportunities(request.json, get_all_opportunities())),
         request.data,
         "POST",
-        url_for('api_opportunities_search'))
+        url_for('api_opportunities_search')))
     resp.headers['Content-Type'] = 'application/json'
     return resp
 
