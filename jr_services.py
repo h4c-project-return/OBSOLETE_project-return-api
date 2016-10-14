@@ -42,7 +42,6 @@ CORS(app)
 def api_root():
     return 'These are not the droids you are looking for.'
 
-
 @app.route('/opportunities', methods=['GET'])
 def api_opportunities():
     resp = build_json_response_success(
@@ -55,13 +54,10 @@ def api_opportunities():
 
 
 @app.route('/opportunities/search', methods=['POST'])
+## E.g.,  {"convictions":[{"type":"Sex","year":2004}],"partTimeOnly":False,"hasDriversLicense":True,"industries":["Building Construction/Skilled Trade"],"abilities":['Standing for 8hrs', '_Heavy Lifting', 'capable with tools and machinery', 'Attention to Detail']}
 def api_opportunities_search():
     resp = build_json_response_success(
-        list(filter_opportunities(
-            {"convictions": [{"type": "Sex", "year": 2004}], "partTimeOnly": False, "hasDriversLicense": True,
-             "industries": ["Building Construction/Skilled Trade"],
-             "abilities": ['Standing for 8hrs', '_Heavy Lifting', 'capable with tools and machinery',
-                           'Attention to Detail']}, get_all_opportunities())),
+        list(filter_opportunities(request.json, get_all_opportunities())),
         request.data,
         "POST",
         url_for('api_opportunities_search'))
