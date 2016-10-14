@@ -45,11 +45,11 @@ def api_root():
 
 @app.route('/opportunities', methods=['GET'])
 def api_opportunities():
-    resp = build_json_response_success(
+    resp = make_response(build_json_response_success(
         list(get_all_opportunities()),
         None,
         "GET",
-        url_for('api_opportunities'))
+        url_for('api_opportunities')))
     resp.headers['Content-Type'] = 'application/json'
     return resp
 

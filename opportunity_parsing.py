@@ -29,7 +29,7 @@ def get_opportunities_criteria(sheet_values):
     tempconv = {}
     tempabilities = {}
 
-    for i, v in enumerate(parse_headers(val)):
+    for i, v in enumerate(parse_headers(sheet_values)):
         if "Conviction" in v[0]:
             if v[1]:
                 tempconv[v[1]] = ''
