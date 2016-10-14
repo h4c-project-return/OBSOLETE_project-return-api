@@ -46,3 +46,4 @@ def skip(count, iterable):
 
 def key_val_dict_list(iterable):
     return map(lambda (k, v): { "key" : k, "value" : v }, iterable)
+

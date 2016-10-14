@@ -20,6 +20,35 @@ def parse_headers(sheet_values):
       "")
 
 
+def get_opportunities_criteria(sheet_values):
+    criteria = {
+        "abilities": [],
+        "convictions": [],
+        "industries": []
+    }
+    tempconv = {}
+    tempabilities = {}
+
+    for i, v in enumerate(parse_headers(val)):
+        if "Conviction" in v[0]:
+            if v[1]:
+                tempconv[v[1]] = ''
+            else:
+                pass
+        elif "Abilities" in v[0]:
+            if v[1]:
+                tempabilities[v[1]] = ''
+            else:
+                pass
+        else:
+            pass
+
+    criteria['abilities'] = tempabilities
+    criteria['convictions'] = tempconv
+
+    return criteria
+
+
 def parse_value_single(primary_header, sheet_row, sheet_headers):
     pairs = parse_value_pairs(primary_header, id, sheet_row, sheet_headers)
     if len(pairs) > 1:
