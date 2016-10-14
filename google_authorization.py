@@ -5,10 +5,10 @@ import httplib2
 
 def build_auth_context(client_secret_filename, scope_uri, redirect_uri, user_agent):
     flow = client.flow_from_clientsecrets(
-        client_secret_filename,  # "client_secret.json"
-        scope = scope_uri,  # 'https://www.googleapis.com/auth/spreadsheets.readonly'
-        redirect_uri = redirect_uri)  # 'http://localhost'
-    flow.user_agent = user_agent  # 'Project Return JR Web Layer'
+        client_secret_filename,
+        scope = scope_uri,
+        redirect_uri = redirect_uri)
+    flow.user_agent = user_agent
     return flow
 
 
@@ -26,14 +26,3 @@ def credentials_are_current(credentials_json):
     except Exception as e:
         raise Exception("Invalid credentials.", e)
     return not credentials.access_token_expired
-
-"""
-auth_code = raw_input(build_auth_uri("http://localhost"))
-credentials = process_auth_response(auth_code)
-
-
-from google_sheets import *
-result = get_sheet_values_cred('1s_EC5hn-A-yKFUYWKO3RZ768AVW9FL-DKNZ3QBb0tls', 'Job Opportunities', credentials)
-
-print(result)
-"""
