@@ -6,6 +6,7 @@ from apiclient import discovery
 from oauth2client import client
 from oauth2client import tools
 from oauth2client.file import Storage
+from flask import json
 
 try:
    import argparse
@@ -59,6 +60,9 @@ def get_credentials():
    return credentials
 
 
+def id(o): return o
+
+
 def fill_none(iterable):
     last_item = None
     for item in iterable:
@@ -70,22 +74,50 @@ def strip(iterable):
     return map(lambda s: s.strip(), iterable)
 
 
+def distinct(iterable):
+    visited = set()
+    for item in iterable:
+        if not item in visited:
+            visited.add(item)
+            yield item
+
+
+def skip(count, iterable):
+    visited = 0
+    for item in iterable:
+        visited = visited + 1
+        if visited > count: yield item
+
+
 def parse_headers(sheet_values):
    return zip(fill_none(strip(sheet_values[0])), strip(sheet_values[1]))
 
 
-def parse_value(primary_header, sheet_row, sheet_headers):
+def parse_value_single(primary_header, sheet_row, sheet_headers):
+    pairs = parse_value_pairs(primary_header, id, sheet_row, sheet_headers)
+    if len(pairs) > 1:
+        raise Exception("Expected one item; found more.")
+    return pairs[0][1]
     header_value_pairs = zip(sheet_headers, sheet_row)
     return filter(lambda item: item[0][0] == primary_header, header_value_pairs)[0][1]
 
 
 def parse_value_pairs(primary_header, parser, sheet_row, sheet_headers):
     header_value_pairs = zip(sheet_headers, sheet_row)
-    return map(lambda (hdr, value): (hdr[1], parser(value)), filter(lambda item: item[0][0] == primary_header, header_value_pairs))
+    return map(lambda (hdr, value): (hdr[1], parser(value.strip())), filter(lambda item: item[0][0] == primary_header, header_value_pairs))
+
+
+def parse_value_single_or_pairs(primary_header, list_proc, sheet_row, sheet_headers):
+    pairs = parse_value_pairs(primary_header, id, sheet_row, sheet_headers)
+    return list_proc(pairs) if len(pairs) > 1 else pairs[0][1]
 
 
 def parse_boolean(s):
-    return s.lower == "true"
+    return s.lower() == "true"
+
+
+def parse_int_maybe(s):
+    return None if s == "" else int(s)
 
 
 def key_val_dict_list(iterable):
@@ -95,35 +127,42 @@ def key_val_dict_list(iterable):
 def parse_opportunity(sheet_row, sheet_headers):
    return {
       "name":
-         parse_value("Company Name", sheet_row, sheet_headers),
+         parse_value_single(KNOWN_HEADERS["name"], sheet_row, sheet_headers),
       "convictionThreshold":
-         parse_value("Conviction Threshold (Yrs)", sheet_row, sheet_headers),
+         parse_int_maybe(parse_value_single(KNOWN_HEADERS["convictionThreshold"], sheet_row, sheet_headers)),
       "convictionRestrictions":
-         dict(parse_value_pairs("Conviction Restrictions", parse_boolean, sheet_row, sheet_headers)),
+         map(lambda pair: pair[0], filter(lambda pair: pair[1],
+            parse_value_pairs(KNOWN_HEADERS["convictionRestrictions"], parse_boolean, sheet_row, sheet_headers))),
       "partTimeAvailable":
-         "PT" in parse_value("Part Time / Full Time", sheet_row, sheet_headers),
+         "PT" in parse_value_single(KNOWN_HEADERS["schedule"], sheet_row, sheet_headers),
       "industry":
-         parse_value("Industry", sheet_row, sheet_headers),
+         parse_value_single(KNOWN_HEADERS["industry"], sheet_row, sheet_headers),
       "type":
-         parse_value("Type", sheet_row, sheet_headers),
+         parse_value_single(KNOWN_HEADERS["type"], sheet_row, sheet_headers),
       "schedule":
-         parse_value("Part Time / Full Time", sheet_row, sheet_headers),
+         parse_value_single(KNOWN_HEADERS["schedule"], sheet_row, sheet_headers),
       "requiredAbilities":
-         dict(parse_value_pairs("Required Abilities", parse_boolean, sheet_row, sheet_headers)),
+         map(lambda pair: pair[0], filter(lambda pair: pair[1],
+            parse_value_pairs(KNOWN_HEADERS["requiredAbilities"], parse_boolean, sheet_row, sheet_headers))),
       "driversLicenseRequired":
-         parse_boolean(parse_value("Requires Driver's License", sheet_row, sheet_headers)),
+         parse_boolean(parse_value_single(KNOWN_HEADERS["driversLicenseRequired"], sheet_row, sheet_headers)),
       "humanFriendly":
          key_val_dict_list(
             map(
                lambda hdr: (
-                  hdr[0],
-                  parse_value_pairs(
-                     hdr[0],
-                     lambda x: x,
-                     sheet_row,
-                     sheet_headers)),
-               filter(lambda hdr: hdr[0] not in KNOWN_HEADERS.values(), sheet_headers))),
+                  hdr,
+                  parse_value_single_or_pairs(hdr, key_val_dict_list, sheet_row, sheet_headers)),
+               filter(
+                  lambda hdr: hdr not in KNOWN_HEADERS.values(),
+                  distinct(map(lambda hdr_pair: hdr_pair[0], sheet_headers))))),
    }
+
+
+def parse_opportunities(sheet_values):
+    headers = parse_headers(sheet_values)
+    for row in skip(2, sheet_values):
+        if row[0].strip() != "":
+            yield parse_opportunity(row, headers)
 
 
 def main():
@@ -154,8 +193,9 @@ def main():
    else:
 #       print(values)
        headers = parse_headers(values)
-       print(headers)
-       print(parse_opportunity(values[2], headers))
+#       print(headers)
+       print(json.dumps(parse_opportunity(values[2], headers)))
+       print(json.dumps(list(parse_opportunities(values))))
        """
        for row in values:
            # Print columns A and E, which correspond to indices 0 and 4.
