@@ -1,6 +1,7 @@
-from flask import Flask, url_for, json
-from opportunity_parsing import parse_opportunities
+from flask import Flask, url_for, json, request
 from google_sheets import get_sheet_values
+from opportunity_parsing import parse_opportunities
+from opportunity_filtering import filter_opportunities
 
 def get_all_opportunities():
     sheet = get_sheet_values('1s_EC5hn-A-yKFUYWKO3RZ768AVW9FL-DKNZ3QBb0tls', 'Job Opportunities')
@@ -43,9 +44,17 @@ def api_opportunities():
         "GET",
         url_for('api_opportunities'))
 
-@app.route('/opportunities/search/articleid', methods=['POST'])
-def api_opportunities_search(articleid):
-    return 'You are reading ' + articleid
+@app.route('/opportunities/search', methods=['POST'])
+def api_opportunities_search():
+    return build_json_response_success(
+        list(filter_opportunities({"convictions":[{"type":"Sex","year":2004}],"partTimeOnly":False,"hasDriversLicense":True,"industries":["Building Construction/Skilled Trade"],"abilities":['Standing for 8hrs', '_Heavy Lifting', 'capable with tools and machinery', 'Attention to Detail']}, get_all_opportunities())),
+        request.data,
+        "POST",
+        url_for('api_opportunities_search'))
+
+#print(
+#    filter_opportunities({"convictions":[{"type":"Sex","year":2004}],"partTimeOnly":False,"hasDriversLicense":True,"industries":["Building Construction/Skilled Trade"],"abilities":['Standing for 8hrs', '_Heavy Lifting', 'capable with tools and machinery', 'Attention to Detail']}, get_all_opportunities())
+#    )
 
 if __name__ == '__main__':
     app.run()
