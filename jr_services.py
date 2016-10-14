@@ -79,6 +79,5 @@ def api_opportunities_criteria():
     resp.headers['Content-Type'] = 'application/json'
     return resp
 
-
-if __name__ == '__main__':
-    app.run(host="0.0.0.0", port="80")
+    if __name__ == '__main__':
+        app.run(host="0.0.0.0", port="80")

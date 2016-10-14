@@ -1,8 +1,7 @@
 from general_functions import *
 
-
 KNOWN_HEADERS = {
-    "name" : "Company Name",
+    "name": "Company Name",
     "convictionThreshold": "Conviction Threshold (Yrs)",
     "convictionRestrictions": "Conviction Restrictions",
     "schedule": "Part Time / Full Time",
@@ -14,10 +13,10 @@ KNOWN_HEADERS = {
 
 
 def parse_headers(sheet_values):
-   return zip_padded(
-      fill_none(strip_all(sheet_values[0])),
-      strip_all(sheet_values[1]),
-      "")
+    return zip_padded(
+        fill_none(strip_all(sheet_values[0])),
+        strip_all(sheet_values[1]),
+        "")
 
 
 def get_opportunities_criteria(sheet_values):
@@ -41,10 +40,13 @@ def get_opportunities_criteria(sheet_values):
             else:
                 pass
         else:
-            pass
+            industries = list((distinct(map(
+                lambda d: d["industry"],
+                parse_opportunities(sheet_values)))))
 
     criteria['abilities'] = tempabilities
     criteria['convictions'] = tempconv
+    criteria['industries'] = industries
 
     return criteria
 
@@ -79,37 +81,39 @@ def parse_int_maybe(s):
 
 
 def parse_opportunity(sheet_row, sheet_headers):
-   return {
-      "name":
-         parse_value_single(KNOWN_HEADERS["name"], sheet_row, sheet_headers),
-      "convictionThreshold":
-         parse_int_maybe(parse_value_single(KNOWN_HEADERS["convictionThreshold"], sheet_row, sheet_headers)),
-      "convictionRestrictions":
-         map(lambda pair: pair[0], filter(lambda pair: pair[1],
-            parse_value_pairs(KNOWN_HEADERS["convictionRestrictions"], parse_boolean, sheet_row, sheet_headers))),
-      "partTimeAvailable":
-         "PT" in parse_value_single(KNOWN_HEADERS["schedule"], sheet_row, sheet_headers),
-      "industry":
-         parse_value_single(KNOWN_HEADERS["industry"], sheet_row, sheet_headers),
-      "type":
-         parse_value_single(KNOWN_HEADERS["type"], sheet_row, sheet_headers),
-      "schedule":
-         parse_value_single(KNOWN_HEADERS["schedule"], sheet_row, sheet_headers),
-      "requiredAbilities":
-         map(lambda pair: pair[0], filter(lambda pair: pair[1],
-            parse_value_pairs(KNOWN_HEADERS["requiredAbilities"], parse_boolean, sheet_row, sheet_headers))),
-      "driversLicenseRequired":
-         parse_boolean(parse_value_single(KNOWN_HEADERS["driversLicenseRequired"], sheet_row, sheet_headers)),
-      "humanFriendly":
-         key_val_dict_list(
-            map(
-               lambda hdr: (
-                  hdr,
-                  parse_value_single_or_pairs(hdr, key_val_dict_list, sheet_row, sheet_headers)),
-               filter(
-                  lambda hdr: hdr not in KNOWN_HEADERS.values(),
-                  distinct(map(lambda hdr_pair: hdr_pair[0], sheet_headers))))),
-   }
+    return {
+        "name":
+            parse_value_single(KNOWN_HEADERS["name"], sheet_row, sheet_headers),
+        "convictionThreshold":
+            parse_int_maybe(parse_value_single(KNOWN_HEADERS["convictionThreshold"], sheet_row, sheet_headers)),
+        "convictionRestrictions":
+            map(lambda pair: pair[0], filter(lambda pair: pair[1],
+                                             parse_value_pairs(KNOWN_HEADERS["convictionRestrictions"], parse_boolean,
+                                                               sheet_row, sheet_headers))),
+        "partTimeAvailable":
+            "PT" in parse_value_single(KNOWN_HEADERS["schedule"], sheet_row, sheet_headers),
+        "industry":
+            parse_value_single(KNOWN_HEADERS["industry"], sheet_row, sheet_headers),
+        "type":
+            parse_value_single(KNOWN_HEADERS["type"], sheet_row, sheet_headers),
+        "schedule":
+            parse_value_single(KNOWN_HEADERS["schedule"], sheet_row, sheet_headers),
+        "requiredAbilities":
+            map(lambda pair: pair[0], filter(lambda pair: pair[1],
+                                             parse_value_pairs(KNOWN_HEADERS["requiredAbilities"], parse_boolean,
+                                                               sheet_row, sheet_headers))),
+        "driversLicenseRequired":
+            parse_boolean(parse_value_single(KNOWN_HEADERS["driversLicenseRequired"], sheet_row, sheet_headers)),
+        "humanFriendly":
+            key_val_dict_list(
+                map(
+                    lambda hdr: (
+                        hdr,
+                        parse_value_single_or_pairs(hdr, key_val_dict_list, sheet_row, sheet_headers)),
+                    filter(
+                        lambda hdr: hdr not in KNOWN_HEADERS.values(),
+                        distinct(map(lambda hdr_pair: hdr_pair[0], sheet_headers))))),
+    }
 
 
 def parse_opportunities(sheet_values):
